@@ -1,53 +1,72 @@
 #!/data/data/com.termux/files/usr/bin/bash
 
-# Auto-launch Eshell on Termux startup
+# Eshell Auto-Launch Setup Script
+# For Termux - Launches Eshell automatically on terminal start
 
-ESHELL_SCRIPT="$HOME/eshell.sh"
-BASHRC="$HOME/.bashrc"
-ZSHRC="$HOME/.zshrc"
+RED='\033[91m'
+GREEN='\033[92m'
+CYAN='\033[96m'
+YELLOW='\033[93m'
+RESET='\033[0m'
 
-# Create the main eshell launcher
-cat > "$ESHELL_SCRIPT" << 'EOF'
-#!/data/data/com.termux/files/usr/bin/bash
-cd "$HOME"
-python "$HOME/eshell.py"
-EOF
+clear_screen() {
+    printf "\033[2J\033[1;1H"
+}
 
-chmod +x "$ESHELL_SCRIPT"
+print_banner() {
+    clear_screen
+    printf "${CYAN}════════════════════════════════════════════════${RESET}\n"
+    printf "${CYAN}     ESHELL AUTO-LAUNCH SETUP${RESET}\n"
+    printf "${CYAN}════════════════════════════════════════════════${RESET}\n\n"
+}
 
-# Add to .bashrc (if using bash)
-if [ -f "$BASHRC" ]; then
-    if ! grep -q "eshell.sh" "$BASHRC"; then
-        echo "" >> "$BASHRC"
-        echo "# Auto-launch Eshell" >> "$BASHRC"
-        echo "if [ -f \$HOME/eshell.py ]; then" >> "$BASHRC"
-        echo "    exec $HOME/eshell.sh" >> "$BASHRC"
-        echo "fi" >> "$BASHRC"
+setup_autolaunch() {
+    BASHRC="$HOME/.bashrc"
+    ZSHRC="$HOME/.zshrc"
+    
+    # Check if eshell.py exists (created by Setup.sh)
+    if [ ! -f "$HOME/eshell.py" ]; then
+        echo -e "${RED}✗ eshell.py not found! Please run Setup.sh first${RESET}"
+        exit 1
     fi
-fi
-
-# Add to .zshrc (if using zsh)
-if [ -f "$ZSHRC" ]; then
-    if ! grep -q "eshell.sh" "$ZSHRC"; then
-        echo "" >> "$ZSHRC"
-        echo "# Auto-launch Eshell" >> "$ZSHRC"
-        echo "if [ -f \$HOME/eshell.py ]; then" >> "$ZSHRC"
-        echo "    exec $HOME/eshell.sh" >> "$ZSHRC"
-        echo "fi" >> "$ZSHRC"
+    
+    # Add to .bashrc
+    if [ -f "$BASHRC" ]; then
+        if ! grep -q "eshell.py" "$BASHRC"; then
+            echo "" >> "$BASHRC"
+            echo "# Auto-launch Eshell" >> "$BASHRC"
+            echo "if [ -f \$HOME/eshell.py ]; then" >> "$BASHRC"
+            echo "    cd \$HOME" >> "$BASHRC"
+            echo "    python eshell.py" >> "$BASHRC"
+            echo "fi" >> "$BASHRC"
+            echo -e "${GREEN}✓ Added to .bashrc${RESET}"
+        else
+            echo -e "${YELLOW}⚠ Eshell already in .bashrc${RESET}"
+        fi
     fi
-fi
+    
+    # Add to .zshrc
+    if [ -f "$ZSHRC" ]; then
+        if ! grep -q "eshell.py" "$ZSHRC"; then
+            echo "" >> "$ZSHRC"
+            echo "# Auto-launch Eshell" >> "$ZSHRC"
+            echo "if [ -f \$HOME/eshell.py ]; then" >> "$ZSHRC"
+            echo "    cd \$HOME" >> "$ZSHRC"
+            echo "    python eshell.py" >> "$ZSHRC"
+            echo "fi" >> "$ZSHRC"
+            echo -e "${GREEN}✓ Added to .zshrc${RESET}"
+        else
+            echo -e "${YELLOW}⚠ Eshell already in .zshrc${RESET}"
+        fi
+    fi
+    
+    echo ""
+    echo -e "${GREEN}════════════════════════════════════════════════${RESET}"
+    echo -e "${GREEN}✓ Auto-launch configured successfully!${RESET}"
+    echo -e "${GREEN}════════════════════════════════════════════════${RESET}"
+    echo ""
+    echo -e "${YELLOW}Restart Termux to see changes${RESET}"
+}
 
-# Create Termux startup script
-TERMUX_BOOT="$HOME/.termux/boot"
-mkdir -p "$TERMUX_BOOT"
-
-cat > "$TERMUX_BOOT/start-eshell" << 'EOF'
-#!/data/data/com.termux/files/usr/bin/bash
-sleep 2
-exec $HOME/eshell.sh
-EOF
-
-chmod +x "$TERMUX_BOOT/start-eshell"
-
-echo -e "\033[96mEshell auto-launch configured!\033[0m"
-echo -e "\033[93mRestart Termux to see changes\033[0m"
+print_banner
+setup_autolaunch
