@@ -1,7 +1,6 @@
-#!/data/data/com.termux/files/usr/bin/bash
+#!/usr/bin/env bash
 
-# Eshell Auto-Launch Setup Script
-# Runs Setup.sh every time Termux opens (which contains eshell.py inside it)
+# Eshell Auto-Launch Setup Script (FIXED)
 
 RED='\033[91m'
 GREEN='\033[92m'
@@ -9,29 +8,49 @@ CYAN='\033[96m'
 RESET='\033[0m'
 
 setup_autolaunch() {
+
     BASHRC="$HOME/.bashrc"
-    ESHELL_SETUP="$HOME/Eshell/Setup.sh"
-    
-    # Check if Setup.sh exists
-    if [ ! -f "$ESHELL_SETUP" ]; then
-        echo -e "${RED}✗ Setup.sh not found in ~/Eshell/${RESET}"
+    ESHELL_MAIN="$HOME/eshell.py"
+
+    echo -e "${CYAN}[*] Configuring Eshell auto-launch...${RESET}"
+
+    # Check if eshell.py exists
+    if [ ! -f "$ESHELL_MAIN" ]; then
+        echo -e "${RED}[✗] eshell.py not found in HOME directory${RESET}"
+        echo -e "${RED}Expected:${RESET} $HOME/eshell.py"
         exit 1
     fi
-    
-    # Add to .bashrc
-    if [ -f "$BASHRC" ]; then
-        if ! grep -q "Setup.sh" "$BASHRC"; then
-            echo "" >> "$BASHRC"
-            echo "# Auto-launch Eshell Setup" >> "$BASHRC"
-            echo "cd ~/Eshell && bash Setup.sh" >> "$BASHRC"
-            echo -e "${GREEN}✓ Added to .bashrc${RESET}"
-        else
-            echo -e "${CYAN}⚠ Auto-launch already configured${RESET}"
-        fi
+
+    # Create .bashrc if missing
+    touch "$BASHRC"
+
+    # Remove old broken launcher
+    sed -i '/Setup.sh/d' "$BASHRC"
+
+    # Add new launcher only if missing
+    if ! grep -q "python ~/eshell.py" "$BASHRC"; then
+
+        {
+            echo ""
+            echo "# ===== Eshell Auto Launch ====="
+
+            # Prevent recursion
+            echo 'if [ -z "$ESHELL_RUNNING" ]; then'
+            echo 'export ESHELL_RUNNING=1'
+            echo 'clear'
+            echo 'python ~/eshell.py'
+            echo 'fi'
+
+        } >> "$BASHRC"
+
+        echo -e "${GREEN}[✓] Auto-launch added successfully${RESET}"
+
+    else
+        echo -e "${CYAN}[!] Auto-launch already exists${RESET}"
     fi
-    
+
     echo ""
-    echo -e "${GREEN}✓ Auto-launch configured! Restart Termux to see changes${RESET}"
+    echo -e "${GREEN}[✓] Done! Restart Termux now.${RESET}"
 }
 
 setup_autolaunch
